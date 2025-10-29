@@ -1,0 +1,22 @@
+services:
+  osrm:
+    image: ghcr.io/project-osrm/osrm-backend
+    container_name: osrm-norway
+    ports:
+      - "5001:5000"
+    volumes:
+      - ./data:/data
+    command: >
+      sh -c "
+        if [ ! -f /data/norway-latest.osm.pbf ]; then
+           wget https://download.geofabrik.de/europe/norway-latest.osm.pbf
+           mv norway-latest.osm.pbf /data/
+        fi
+        if [ ! -f /data/norway-latest.osrm.hsgr ]; then
+          echo 'Extracting and contracting map...';
+          osrm-extract -p /opt/car.lua /data/norway-latest.osm.pbf &&
+          osrm-contract /data/norway-latest.osrm;
+        fi
+        osrm-routed /data/norway-latest.osrm
+      "
+
